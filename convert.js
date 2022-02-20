@@ -4,7 +4,7 @@ var html_elements = {
   converted: null,
   text: null,
   classname: "hidden",
-  set_visibility: function (show_converted, show_text) {
+  set_visibility: function (show_converted) {
     if (this.converted === null) {
       this.converted = document.getElementById("converted");
     }
@@ -16,17 +16,12 @@ var html_elements = {
     } else {
       this.converted.classList.add(this.classname);
     }
-    if (show_text) {
-      this.text.classList.remove(this.classname);
-    } else {
-      this.text.classList.add(this.classname);
-    }
   }
 };
 
 function convert() {
   /** @type String */
-  var number = document.getElementById("number").value;
+  let number = document.getElementById("number").value;
   if (!number.length) {
     return invalid_input();
   } else if (/^\d+$/.test(number)) {
@@ -35,16 +30,18 @@ function convert() {
     if (number == 0 || number > 10000) {
       return invalid_input();
     }
-    html_elements.set_visibility(true, false);
+    html_elements.set_visibility(true);
     html_elements.converted.innerHTML = decimal_to_roman(number);
+    html_elements.text.innerHTML = number_to_text(number);
   } else if (/^[IVXLCDM]+$/.test(number)) {
     // All characters are roman numeral letters
     number = parse_roman(number)
     if (number <= 0) {
       return invalid_input();
     }
-    html_elements.set_visibility(true, false);
+    html_elements.set_visibility(true);
     html_elements.converted.innerHTML = number.toString();
+    html_elements.text.innerHTML = number_to_text(number);
   } else {
     invalid_input();
   }
@@ -52,17 +49,17 @@ function convert() {
 
 function invalid_input() {
   let errMsg = "Invalid input!";
-  html_elements.set_visibility(false, true);
-  document.getElementById("text").innerHTML = errMsg;
+  html_elements.set_visibility(false);
+  html_elements.text.innerHTML = errMsg;
 }
 
 function decimal_to_roman(n) {
-  let ones = n % 10;
+  const ones = n % 10;
   n = (n - ones) / 10;
-  let tens = n % 10;
+  const tens = n % 10;
   n = (n - tens) / 10;
-  let hundreds = n % 10;
-  let thousands = (n - hundreds) / 10;
+  const hundreds = n % 10;
+  const thousands = (n - hundreds) / 10;
   let roman = "";
   for (let i = 0; i < thousands; i++) {
     roman += "M";
@@ -97,7 +94,7 @@ function parse_roman(roman) {
   let previous = 0;
   let count = 1;
   for (let i = 0; i < roman.length; i++) {
-    let current = parse_roman_letter(roman[i]);
+    const current = parse_roman_letter(roman[i]);
     if (current == previous) {
       count++;
     } else {
@@ -134,11 +131,88 @@ function parse_roman_letter(roman) {
   }
 }
 
+function number_to_text(n) {
+  if (n < 1000) {
+    return number_to_text_under_thousand(n);
+  }
+  const remainder = n % 1000;
+  const thousands = (n - remainder) / 1000;
+  let text = number_to_text(thousands) + " thousand";
+  if (remainder >= 100) {
+    text += " " + number_to_text_under_thousand(remainder);
+  } else if (remainder) {
+    text += " and " + number_to_text_under_hundred(remainder);
+  }
+  return text;
+}
+
+function number_to_text_under_thousand(n) {
+  if (n < 100) {
+    return number_to_text_under_hundred(n);
+  }
+  const remainder = n % 100;
+  const hundreds = (n - remainder) / 100;
+  let text = number_to_text_under_twenty(hundreds) + " hundred";
+  if (remainder) {
+    text += " and " + number_to_text_under_hundred(remainder)
+  };
+  return text;
+}
+
+function number_to_text_under_hundred(n) {
+  if (n < 20) {
+    return number_to_text_under_twenty(n);
+  }
+  const words = [
+    "twenty",
+    "thirty",
+    "forty",
+    "fifty",
+    "sixty",
+    "seventy",
+    "eighty",
+    "ninety"
+  ];
+  const ones = n % 10;
+  const tens = (n - ones) / 10;
+  let text = words[tens - 2];
+  if (ones) {
+    text += " " + number_to_text_under_twenty(ones)
+  }
+  return text;
+}
+
+function number_to_text_under_twenty(n) {
+  const words = [
+    "zero",
+    "one",
+    "two",
+    "three",
+    "four",
+    "five",
+    "six",
+    "seven",
+    "eight",
+    "nine",
+    "ten",
+    "eleven",
+    "twelve",
+    "thirteen",
+    "fourteen",
+    "fifteen",
+    "sixteen",
+    "seventeen",
+    "eighteen",
+    "nineteen"
+  ];
+  return words[n];
+}
+
 // test
 if (false) {
   for (let i = 1; i < 4000; i++) {
-    let roman = decimal_to_roman(i);
-    let decimal = parse_roman(roman);
+    const roman = decimal_to_roman(i);
+    const decimal = parse_roman(roman);
     if (i != decimal) {
       console.log([i.toString(), roman, decimal.toString()].join(" -> "));
     }
