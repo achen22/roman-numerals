@@ -37,6 +37,14 @@ function convert() {
     }
     html_elements.set_visibility(true, false);
     html_elements.converted.innerHTML = decimal_to_roman(number);
+  } else if (/^[IVXLCDM]+$/.test(number)) {
+    // All characters are roman numeral letters
+    number = parse_roman(number)
+    if (number <= 0) {
+      return invalid_input();
+    }
+    html_elements.set_visibility(true, false);
+    html_elements.converted.innerHTML = number.toString();
   } else {
     invalid_input();
   }
@@ -81,4 +89,58 @@ function roman_digit(n, one, five, ten) {
     roman += one;
   }
   return roman;
+}
+
+function parse_roman(roman) {
+  let positive = 0;
+  let negative = 0;
+  let previous = 0;
+  let count = 1;
+  for (let i = 0; i < roman.length; i++) {
+    let current = parse_roman_letter(roman[i]);
+    if (current == previous) {
+      count++;
+    } else {
+      if (current < previous) {
+        positive += previous * count;
+      } else {
+        negative += previous * count;
+      }
+      previous = current;
+      count = 1;
+    }
+  }
+  return positive - negative + previous * count;
+}
+
+function parse_roman_letter(roman) {
+  switch (roman) {
+    case "I":
+      return 1;
+    case "V":
+      return 5;
+    case "X":
+      return 10;
+    case "L":
+      return 50;
+    case "C":
+      return 100;
+    case "D":
+      return 500;
+    case "M":
+      return 1000;
+    default:
+      return NaN;
+  }
+}
+
+// test
+if (false) {
+  for (let i = 1; i < 4000; i++) {
+    let roman = decimal_to_roman(i);
+    let decimal = parse_roman(roman);
+    if (i != decimal) {
+      console.log([i.toString(), roman, decimal.toString()].join(" -> "));
+    }
+  }  
 }
